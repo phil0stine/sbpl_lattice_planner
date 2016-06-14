@@ -235,9 +235,18 @@ void SBPLLatticePlanner::publishStats(int solution_cost, int solution_size,
   stats_publisher_.publish(stats);
 }
 
+
 bool SBPLLatticePlanner::makePlan(const geometry_msgs::PoseStamped& start,
-                                 const geometry_msgs::PoseStamped& goal,
-                                 std::vector<geometry_msgs::PoseStamped>& plan){
+				  const geometry_msgs::PoseStamped& goal,
+				  std::vector<geometry_msgs::PoseStamped>& plan){
+  double cost = 0.0;
+  return makePlan(start, goal, plan, cost);
+}
+
+bool SBPLLatticePlanner::makePlan(const geometry_msgs::PoseStamped& start,
+				  const geometry_msgs::PoseStamped& goal,
+				  std::vector<geometry_msgs::PoseStamped>& plan,
+				  double& cost){
   if(!initialized_){
     ROS_ERROR("Global planner is not initialized");
     return false;
@@ -348,6 +357,7 @@ bool SBPLLatticePlanner::makePlan(const geometry_msgs::PoseStamped& start,
   }
 
   ROS_DEBUG("size of solution=%d", (int)solution_stateIDs.size());
+  cost = static_cast<double> (solution_cost);
 
   vector<EnvNAVXYTHETALAT3Dpt_t> sbpl_path;
   try{
