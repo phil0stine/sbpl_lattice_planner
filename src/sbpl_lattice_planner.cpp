@@ -360,6 +360,11 @@ bool SBPLLatticePlanner::makePlan(const geometry_msgs::PoseStamped& start,
   ROS_DEBUG("Plan has %d points.\n", (int)sbpl_path.size());
   ros::Time plan_time = ros::Time::now();
 
+  // Assume first pose in path is current pose. Resolve issue with sbpl discretized cells converted to SE(2) pose
+  double offset_x = sbpl_path[0].x + costmap_ros_->getCostmap()->getOriginX();
+  double offset_y = sbpl_path[0].y + costmap_ros_->getCostmap()->getOriginY();
+  double offset_theta = sbpl_path[0].theta - theta_start;
+
   //create a message for the plan
   nav_msgs::Path gui_path;
   gui_path.poses.resize(sbpl_path.size());
@@ -370,12 +375,12 @@ bool SBPLLatticePlanner::makePlan(const geometry_msgs::PoseStamped& start,
     pose.header.stamp = plan_time;
     pose.header.frame_id = costmap_ros_->getGlobalFrameID();
 
-    pose.pose.position.x = sbpl_path[i].x + costmap_ros_->getCostmap()->getOriginX();
-    pose.pose.position.y = sbpl_path[i].y + costmap_ros_->getCostmap()->getOriginY();
+    pose.pose.position.x = sbpl_path[i].x + costmap_ros_->getCostmap()->getOriginX() - offset_x + start.pose.position.x;
+    pose.pose.position.y = sbpl_path[i].y + costmap_ros_->getCostmap()->getOriginY() - offset_y + start.pose.position.y;
     pose.pose.position.z = start.pose.position.z;
 
     tf::Quaternion temp;
-    temp.setRPY(0,0,sbpl_path[i].theta);
+    temp.setRPY(0,0,sbpl_path[i].theta + offset_theta);
     pose.pose.orientation.x = temp.getX();
     pose.pose.orientation.y = temp.getY();
     pose.pose.orientation.z = temp.getZ();
